@@ -55,8 +55,5 @@ jobs:
     
     steps:
       - name: Delete old artifacts
-        uses: actions/delete-artifact@v2
-        with:
-          name: java-app
-          path: '${{ github.workspace }}/target/*.jar'
-          retention-days: 3
+        run: |
+          find ${{ github.workspace }}/target -name "*.jar" -mtime +3 -exec rm {} \;
