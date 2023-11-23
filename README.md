@@ -171,6 +171,8 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 Le Thanh Hai - [@my_facebook](https://www.facebook.com/hailedeeptry/) - lehai112003@gmail.com
 
+Lam Le Nhan - lmnhn995@gmail.com
+
 Project Link: [https://github.com/ProjectSWP1/Zoo-Application](https://github.com/ProjectSWP1/Zoo-Application)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
