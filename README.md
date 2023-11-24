@@ -1,4 +1,4 @@
-
+[![Build and deploy JAR app to Azure Web App - zookay](https://github.com/lmnhn/ZooKay-Backend/actions/workflows/main_zookay.yml/badge.svg)](https://github.com/lmnhn/ZooKay-Backend/actions/workflows/main_zookay.yml)
 
 
 
