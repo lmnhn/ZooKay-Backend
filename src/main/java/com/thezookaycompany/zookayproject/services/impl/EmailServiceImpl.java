@@ -86,9 +86,9 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendAfterPaymentEmail(OrdersDto ordersDto) throws MessagingException {
         Orders orders = ordersRepository.findOrdersByOrderID(ordersDto.getOrderID());
-        Member mem = memberRepository.findMemberByEmail(orders.getEmail());
+
         //get name
-        String name = mem.getName();
+        String name = orders.getEmail().trim().split("@")[0];
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
         mimeMessageHelper.setTo(orders.getEmail());
