@@ -1,5 +1,6 @@
 package com.thezookaycompany.zookayproject.controller;
 
+import com.thezookaycompany.zookayproject.exception.InvalidAnimalException;
 import com.thezookaycompany.zookayproject.exception.InvalidCageException;
 import com.thezookaycompany.zookayproject.model.dto.*;
 import com.thezookaycompany.zookayproject.model.entity.*;
@@ -192,10 +193,10 @@ public class ManageController {
     @DeleteMapping("/remove-animal-species/{speciesId}")
     public ResponseEntity<String> removeAnimalSpecies(@PathVariable Integer speciesId) {
         try {
-            String deletedAnimalSpId = animalService.removeAnimalSpecies(speciesId);
-            return ResponseEntity.ok("Animal Species id: " + deletedAnimalSpId);
-        } catch (InvalidCageException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Animal Species not found with ID: " + speciesId);
+            String result = animalService.removeAnimalSpecies(speciesId);
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (InvalidAnimalException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
