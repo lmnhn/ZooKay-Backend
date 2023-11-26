@@ -59,7 +59,7 @@ public class SecurityConfig {
                     auth.requestMatchers("/qrcode/**").permitAll();
                     auth.requestMatchers("/voucher/**").hasRole("Member");
                     auth.requestMatchers("/admin/**").hasRole("Admin");
-                    auth.requestMatchers("/dashboard/**").hasRole("Admin");
+                    auth.requestMatchers("/dashboard/**").hasAnyRole("Admin", "Staff");
                     auth.requestMatchers("/staff/**").hasAnyRole("Admin", "Staff");
                     auth.requestMatchers("/trainer/**").hasAnyRole("Admin", "Staff", "Trainer");
                     auth.anyRequest().authenticated();
