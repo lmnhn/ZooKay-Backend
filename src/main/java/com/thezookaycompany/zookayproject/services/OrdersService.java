@@ -51,4 +51,10 @@ public interface OrdersService {
     List<Orders> findOrdersByOrderDate(LocalDate searchDate);
 
     List<Orders> findOrdersByVisitDate(Date visitDate);
+
+    Integer getTotalAdultTicketsSold();
+
+    Integer getTotalChildrenTicketsSold();
+
+    double calculateTotalRevenueForMonthYear(int year, Month month);
 }

@@ -181,12 +181,15 @@ public class AdminController {
 
     //Hàm này xóa Ticket : REMOVE//
     @DeleteMapping("/remove-ticket/{ticketId}")
-    public ResponseEntity<String> removeTicket(@PathVariable("ticketId") String ticketId) {
-        try {
-            String deletedTicketId = ticketService.removeTicket(ticketId);
-            return ResponseEntity.ok("Deleted Ticket id: " + deletedTicketId);
-        } catch (InvalidTicketException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ticket not found with ID: " + ticketId);
+    public ResponseEntity<String> removeTicket(@PathVariable String ticketId) {
+        String response = ticketService.removeTicket(ticketId);
+
+        if (response.equals("Ticket deleted successfully.")) {
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else if (response.startsWith("Ticket not found with Id")) {
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        } else {
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -249,7 +252,7 @@ public class AdminController {
     public ResponseEntity<String> updateEmployees(@RequestBody EmployeesDto employeesDto) {
         String response = employeeService.updateEmployees(employeesDto);
 
-        if (response.contains("success")) {
+        if (response.contains(SUCCESS_RESPONSE)) {
             // If the response indicates successful update, return an HTTP 200 (OK) status.
             return ResponseEntity.ok(response);
         } else {
@@ -273,7 +276,7 @@ public class AdminController {
     public ResponseEntity<?> updateVoucher(@RequestBody VoucherDto voucherDto) {
         String updateResponse = voucherService.updateVoucher(voucherDto);
 
-        if (updateResponse.startsWith("Voucher updated successfully.")) {
+        if (updateResponse.contains(SUCCESS_RESPONSE)) {
             return ResponseEntity.ok(updateResponse);
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(updateResponse);
@@ -281,12 +284,15 @@ public class AdminController {
     }
 
     @DeleteMapping("/delete-voucher/{voucherId}")
-    public ResponseEntity<String> removeVoucher(@PathVariable("voucherId") String voucherId) {
-        try {
-            String deletedVoucherId = voucherService.deleteVoucher(voucherId);
-            return ResponseEntity.ok("Voucher removed successfully with id: " + deletedVoucherId);
-        } catch (InvalidVoucherException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Voucher not found with ID: " + voucherId);
+    public ResponseEntity<String> deleteVoucher(@PathVariable String voucherId) {
+        String response = voucherService.deleteVoucher(voucherId);
+
+        if (response.contains(SUCCESS_RESPONSE)) {
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else if (response.equals("Voucher not found")) {
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        } else {
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }
 

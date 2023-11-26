@@ -107,4 +107,21 @@ public class DashboardController {
     public double getTotalPriceOfZoo() {
         return ordersService.calculateTotalPriceOfZoo();
     }
+
+    // TỔNG SỐ VÉ ADULT ĐÃ BÁN
+    @GetMapping("/adult/sold")
+    public Integer getTotalAdultTicketsSold() {
+        return ordersService.getTotalAdultTicketsSold();
+    }
+    // TỔNG SỐ VÉ CHILDREN ĐÃ BÁN
+    @GetMapping("/children/sold")
+    public Integer getTotalChildrenTicketsSold() {
+        return ordersService.getTotalChildrenTicketsSold();
+    }
+
+    //TỔNG TIỀN THEO THÁNG NÀO NĂM NÀO
+    @GetMapping("/total/{year}/{month}")
+    public double getTotalRevenueForMonthYear(@PathVariable int year, @PathVariable int month) {
+        return ordersService.calculateTotalRevenueForMonthYear(year, Month.of(month));
+    }
 }

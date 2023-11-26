@@ -195,13 +195,15 @@ public class OrdersServiceImpl implements OrdersService {
     public long countSoldTickets() {
         // Find all orders with successful payments
         List<Orders> successfulOrders = ordersRepository.findOrdersByPaymentSuccess(true);
-        // Calculate the total quantity of successful orders
+
+        // Calculate the total quantity of both adult and children tickets from successful orders
         long totalQuantitySold = successfulOrders.stream()
-                .mapToLong(Orders::getQuantity)
+                .mapToLong(order -> order.getQuantity() + order.getChildrenQuantity())
                 .sum();
 
         return totalQuantitySold;
     }
+
 
     @Override
     public long countSuccessfulTicketsOrderedToday() {
@@ -215,13 +217,14 @@ public class OrdersServiceImpl implements OrdersService {
         // Query the database for orders placed today with successful payments
         List<Orders> successfulOrdersPlacedToday = ordersRepository.findOrdersByOrderDateBetweenAndOrderPaymentsSuccess(startOfDay, endOfDay, true);
 
-        // Calculate the total quantity of tickets ordered today with successful payments
+        // Calculate the total quantity of both adult and children tickets ordered today with successful payments
         long totalSuccessfulTicketsOrderedToday = successfulOrdersPlacedToday.stream()
-                .mapToLong(Orders::getQuantity)
+                .mapToLong(order -> order.getQuantity() + order.getChildrenQuantity())
                 .sum();
 
         return totalSuccessfulTicketsOrderedToday;
     }
+
 
     @Override
     public long countSuccessfulTicketsOrderedThisWeek() {
@@ -233,7 +236,7 @@ public class OrdersServiceImpl implements OrdersService {
                 startOfWeek, endOfWeek, true);
 
         return successfulOrdersThisWeek.stream()
-                .mapToLong(Orders::getQuantity)
+                .mapToLong(order -> order.getQuantity() + order.getChildrenQuantity())
                 .sum();
     }
 
@@ -247,11 +250,9 @@ public class OrdersServiceImpl implements OrdersService {
                 startOfMonth, endOfMonth, true);
 
         return successfulOrdersForMonth.stream()
-                .mapToLong(Orders::getQuantity)
+                .mapToLong(order -> order.getQuantity() + order.getChildrenQuantity())
                 .sum();
     }
-
-
 
     @Override
     public long countSuccessfulTicketsOrderedThisYear(int year) {
@@ -262,27 +263,32 @@ public class OrdersServiceImpl implements OrdersService {
                 startOfYear, endOfYear, true);
 
         return successfulOrdersForYear.stream()
-                .mapToLong(Orders::getQuantity)
+                .mapToLong(order -> order.getQuantity() + order.getChildrenQuantity())
                 .sum();
     }
+
 
     @Override
     public double calculateTotalPriceOfZoo() {
         List<Orders> orders = ordersRepository.findAll();
 
-        double totalPrice = 0.0;
+        return orders.stream()
+                .filter(order -> order.getOrderPayments() != null && order.getOrderPayments().getSuccess())
+                .mapToDouble(order -> {
+                    double adultTicketPrice = order.getTicket().getTicketPrice();
+                    double childrenTicketPrice = order.getTicket().getChildrenTicketPrice();
+                    int adultQuantity = order.getQuantity();
+                    int childrenQuantity = order.getChildrenQuantity();
 
-        for (Orders order : orders) {
-            if (order.getOrderPayments() != null && order.getOrderPayments().getSuccess()) {
-                double ticketPrice = order.getTicket().getTicketPrice();
-                int quantity = order.getQuantity();
-                double orderTotal = quantity * ticketPrice;
-                totalPrice += orderTotal;
-            }
-        }
+                    double adultTotal = adultQuantity * adultTicketPrice;
+                    double childrenTotal = childrenQuantity * childrenTicketPrice;
 
-        return totalPrice;
+                    return adultTotal + childrenTotal;
+                })
+                .sum();
     }
+
+
     @Override
     public List<Orders> findOrdersByOrderDate(LocalDate searchDate) {
         return ordersRepository.findByOrderDate(searchDate);
@@ -291,6 +297,39 @@ public class OrdersServiceImpl implements OrdersService {
     public List<Orders> findOrdersByVisitDate(Date visitDate) {
         return ordersRepository.findByTicket_VisitDate(visitDate);
     }
+    @Override
+    public Integer getTotalAdultTicketsSold() {
+        return ordersRepository.getTotalAdultTicketsSold();
+    }
+    @Override
+    public Integer getTotalChildrenTicketsSold() {
+        return ordersRepository.getTotalChildrenTicketsSold();
+    }
+
+    @Override
+    public double calculateTotalRevenueForMonthYear(int year, Month month) {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0, 0, 0);
+        LocalDateTime endOfMonth = yearMonth.atEndOfMonth().atTime(23, 59, 59, 999999999);
+
+        List<Orders> successfulOrdersForMonth = ordersRepository.findSuccessfulOrdersThisMonth(
+                startOfMonth, endOfMonth, true);
+
+        return successfulOrdersForMonth.stream()
+                .mapToDouble(order -> {
+                    double adultTicketPrice = order.getTicket().getTicketPrice();
+                    double childrenTicketPrice = order.getTicket().getChildrenTicketPrice();
+                    int adultQuantity = order.getQuantity();
+                    int childrenQuantity = order.getChildrenQuantity();
+
+                    double adultTotal = adultQuantity * adultTicketPrice;
+                    double childrenTotal = childrenQuantity * childrenTicketPrice;
+
+                    return adultTotal + childrenTotal;
+                })
+                .sum();
+    }
+
 
 }
 

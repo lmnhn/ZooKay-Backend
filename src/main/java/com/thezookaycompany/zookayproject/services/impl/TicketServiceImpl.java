@@ -2,7 +2,9 @@ package com.thezookaycompany.zookayproject.services.impl;
 
 import com.thezookaycompany.zookayproject.exception.InvalidTicketException;
 import com.thezookaycompany.zookayproject.model.dto.TicketDto;
+import com.thezookaycompany.zookayproject.model.entity.Orders;
 import com.thezookaycompany.zookayproject.model.entity.Ticket;
+import com.thezookaycompany.zookayproject.repositories.OrdersRepository;
 import com.thezookaycompany.zookayproject.repositories.TicketRepository;
 import com.thezookaycompany.zookayproject.services.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,9 @@ public class TicketServiceImpl implements TicketService {
 
     @Autowired
     private TicketRepository ticketRepository;
+
+    @Autowired
+    private OrdersRepository ordersRepository;
 
 
     @Override
@@ -66,6 +71,12 @@ public class TicketServiceImpl implements TicketService {
         if (optionalExistingTicket.isPresent()) {
             Ticket existingTicket = optionalExistingTicket.get();
 
+            // Check if the ticket is associated with any order
+            List<Orders> ordersWithTicket = ordersRepository.findByTicket(existingTicket);
+            if (!ordersWithTicket.isEmpty()) {
+                return "Cannot update ticket because it has been used in one or more orders.";
+            }
+
             // Truncate both newVisitDate and currentDate to remove time information
             Date currentDate = truncateTime(new Date());
             Date newVisitDate = ticketDto.getVisitDate() != null ? truncateTime(ticketDto.getVisitDate()) : null;
@@ -91,6 +102,7 @@ public class TicketServiceImpl implements TicketService {
         }
     }
 
+
     private Date truncateTime(Date date) {
         if (date != null) {
             Calendar calendar = Calendar.getInstance();
@@ -107,13 +119,22 @@ public class TicketServiceImpl implements TicketService {
 
     @Override
     public String removeTicket(String id) {
-        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new InvalidTicketException("Not found this Ticket ID to delete."));
+        Ticket ticket = ticketRepository.findById(id).orElse(null);
 
-        ticketRepository.delete(ticket);
+        // Check if the ticket is associated with any order
+        List<Orders> ordersWithTicket = ordersRepository.findByTicket(ticket);
+        if (!ordersWithTicket.isEmpty()) {
+            return "Cannot delete ticket because it is associated with one or more orders.";
+        }
 
-        return ticket.getTicketId();
-
+        if (ticket != null) {
+            ticketRepository.delete(ticket);
+            return "Ticket deleted successfully.";
+        } else {
+            return "Ticket not found with Id " + id;
+        }
     }
+
 
     @Override
     public List<Ticket> findAllTicket() {
@@ -163,10 +184,11 @@ public class TicketServiceImpl implements TicketService {
                 newTicket.setTicketPrice(Double.valueOf(price)); // Assuming price is in Integer
                 newTicket.setChildrenTicketPrice(Double.valueOf((childrenPrice)));
                 newTicket.setVisitDate(calendar.getTime());
-                // Set other ticket properties if needed
-
-                // Save the new ticket to the database
-                ticketRepository.save(newTicket);
+                // Skip the ticket that visit date created (duplicate on visit-date)
+                if(!ticketRepository.existsByVisitDate(calendar.getTime())) {
+                    // Save the new ticket to the database
+                    ticketRepository.save(newTicket);
+                }
 
                 // Print or log the generated ticket
                 System.out.println("Generated Ticket: " + newTicket.toString());

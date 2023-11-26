@@ -1,6 +1,7 @@
 package com.thezookaycompany.zookayproject.services.impl;
 
 import com.thezookaycompany.zookayproject.exception.InvalidVoucherException;
+import com.thezookaycompany.zookayproject.exception.VoucherInUseException;
 import com.thezookaycompany.zookayproject.model.dto.VoucherDto;
 import com.thezookaycompany.zookayproject.model.entity.Orders;
 import com.thezookaycompany.zookayproject.model.entity.Voucher;
@@ -51,26 +52,48 @@ public class VoucherServiceImpl implements VoucherService {
         if (voucherDto.getVoucherId() == null || voucherDto.getVoucherId().length() >= 6) {
             return "Voucher ID field is empty or the length is greater than 5 characters";
         }
+
         Voucher existingVoucher = voucherRepository.findById(voucherDto.getVoucherId()).orElse(null);
         if (existingVoucher != null) {
-            //update
-            existingVoucher.setVoucherId(voucherDto.getVoucherId());
+            // Check if the voucher is associated with any order
+            List<Orders> ordersWithVoucher = ordersRepository.findByOrderVoucher(existingVoucher);
+            if (!ordersWithVoucher.isEmpty()) {
+                return "Cannot update voucher because it is associated with one or more orders.";
+            }
+
+            // Update other fields
             existingVoucher.setCoupon(voucherDto.getCoupon());
             existingVoucher.setDescription(voucherDto.getDescription());
             existingVoucher.setExpirationDate(voucherDto.getExpirationDate());
+
             voucherRepository.save(existingVoucher);
-            return "Voucher updated successfully";
+            return "Voucher updated successfully.";
         } else {
-            return "Voucher not found with Id" + voucherDto.getVoucherId();
+            return "Voucher not found with Id " + voucherDto.getVoucherId();
         }
     }
 
+
+
     @Override
     public String deleteVoucher(String id) {
-        Voucher voucher = voucherRepository.findById(id).orElseThrow(() -> new InvalidVoucherException("Not found this Voucher ID to delete."));
-        voucherRepository.delete(voucher);
-        return voucher.getVoucherId();
+        Voucher voucher = voucherRepository.findById(id).orElse(null);
+
+        // Check if the voucher is associated with any order
+        List<Orders> ordersWithVoucher = ordersRepository.findByOrderVoucher(voucher);
+        if (!ordersWithVoucher.isEmpty()) {
+            return "Cannot delete voucher because it is associated with one or more orders.";
+        }
+
+        if (voucher != null) {
+            voucherRepository.delete(voucher);
+            return "Voucher deleted successfully";
+        } else {
+            return "Voucher not found";
+        }
     }
+
+
 
     @Override
     public List<Voucher> getAllVoucher() {
@@ -121,9 +144,10 @@ public class VoucherServiceImpl implements VoucherService {
                 newVoucher.setCoupon(coupon);
                 newVoucher.setExpirationDate(calendar.getTime());
                 // Set other voucher properties if needed
-
-                // Save the new voucher to the database
-                voucherRepository.save(newVoucher);
+                if(!voucherRepository.existsByExpirationDate(calendar.getTime())) {
+                    // Save the new voucher to the database
+                    voucherRepository.save(newVoucher);
+                }
 
                 // Print or log the generated voucher
                 System.out.println("Generated Voucher: " + newVoucher.toString());

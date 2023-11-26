@@ -1,8 +1,6 @@
 package com.thezookaycompany.zookayproject.repositories;
 
-import com.thezookaycompany.zookayproject.model.entity.Cage;
-import com.thezookaycompany.zookayproject.model.entity.Member;
-import com.thezookaycompany.zookayproject.model.entity.Orders;
+import com.thezookaycompany.zookayproject.model.entity.*;
 import jakarta.persistence.criteria.Order;
 import org.aspectj.weaver.ast.Or;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import com.thezookaycompany.zookayproject.model.entity.Payment;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -70,4 +67,14 @@ public interface OrdersRepository extends JpaRepository<Orders ,Integer> {
      @Query("SELECT o FROM Orders o WHERE CAST(o.orderDate AS date) = :searchDate")
      List<Orders> findByOrderDate(@Param("searchDate") LocalDate searchDate);
      List<Orders> findByTicket_VisitDate(Date visitDate);
+
+    List<Orders> findByOrderVoucher(Voucher voucher);
+
+     List<Orders> findByTicket(Ticket ticket);
+
+     @Query("SELECT SUM(o.quantity) FROM Orders o WHERE o.orderPayments.isSuccess = true")
+     Integer getTotalAdultTicketsSold();
+
+     @Query("SELECT SUM(o.childrenQuantity) FROM Orders o WHERE o.orderPayments.isSuccess = true")
+     Integer getTotalChildrenTicketsSold();
 }
